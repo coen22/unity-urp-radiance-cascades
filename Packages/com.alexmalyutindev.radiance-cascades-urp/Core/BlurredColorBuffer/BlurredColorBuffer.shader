@@ -23,7 +23,7 @@ Shader "Hidden/BlurredColorBuffer"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Common.hlsl"
+            #include "../Shaders/Common.hlsl"
 
             Texture2D<float4> _BlitTexture;
             float4 _BlitTexture_TexelSize;
@@ -84,7 +84,7 @@ Shader "Hidden/BlurredColorBuffer"
 
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Common.hlsl"
+            #include "../Shaders/Common.hlsl"
 
             Texture2D<float4> _BlitTexture;
             float4 _BlitTexture_TexelSize;
@@ -145,7 +145,7 @@ Shader "Hidden/BlurredColorBuffer"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            #include "Common.hlsl"
+            #include "../Shaders/Common.hlsl"
             Texture2D<float4> _BlitTexture;
             float4 _BlitTexture_TexelSize;
             float2 _InputResolution;
@@ -204,7 +204,7 @@ Shader "Hidden/BlurredColorBuffer"
 
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Common.hlsl"
+            #include "../Shaders/Common.hlsl"
 
             Texture2D<float4> _BlitTexture;
             float4 _BlitTexture_TexelSize;
