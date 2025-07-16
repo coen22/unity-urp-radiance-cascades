@@ -82,7 +82,9 @@ Shader "Hidden/BlurredColorBuffer"
             #pragma vertex Vertex
             #pragma fragment Fragment
 
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "../Shaders/Common.hlsl"
 
@@ -142,7 +144,9 @@ Shader "Hidden/BlurredColorBuffer"
             #pragma vertex Vertex
             #pragma fragment Fragment
 
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             #include "../Shaders/Common.hlsl"
@@ -202,7 +206,9 @@ Shader "Hidden/BlurredColorBuffer"
             #pragma vertex Vertex
             #pragma fragment Fragment
 
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "../Shaders/Common.hlsl"
 
