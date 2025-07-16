@@ -7,16 +7,10 @@ namespace AlexMalyutinDev.RadianceCascades
     public class RadianceCascadesDirectionFirstCS
     {
         private readonly ComputeShader _compute;
-        private readonly int _renderAndMergeKernel;
-        private readonly int _combineSHKernel;
-        private readonly LocalKeyword _bilinearKw;
-        private readonly LocalKeyword _bilateralKw;
 
         public RadianceCascadesDirectionFirstCS(ComputeShader compute)
         {
             _compute = compute;
-            _renderAndMergeKernel = _compute.FindKernel("RenderAndMergeCascade");
-            _combineSHKernel = _compute.FindKernel("CombineSH");
         }
 
         public void RenderMerge(
@@ -30,7 +24,7 @@ namespace AlexMalyutinDev.RadianceCascades
             ref RTHandle target
         )
         {
-            var kernel = _renderAndMergeKernel;
+            var kernel = _compute.FindKernel("RenderAndMergeCascade");
             if (kernel < 0) return;
 
             cmd.BeginSample("RadianceCascade.RenderMerge");
@@ -105,7 +99,7 @@ namespace AlexMalyutinDev.RadianceCascades
             RTHandle radianceSH
         )
         {
-            var kernel = _combineSHKernel;
+            var kernel = _compute.FindKernel("CombineSH");
             if (kernel < 0) return;
 
             cmd.BeginSample("RadianceCascade.CombineSH");
