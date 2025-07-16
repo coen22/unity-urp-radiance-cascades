@@ -1,5 +1,18 @@
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+// URP 17 removed automatic inclusion of global samplers in some contexts.
+// Define the common sampler states manually when the SAMPLER macro is
+// unavailable to keep older shader code working across versions.
+#ifdef SAMPLER
+    #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+#else
+    SamplerState sampler_PointClamp;
+    SamplerState sampler_LinearClamp;
+    SamplerState sampler_TrilinearClamp;
+    SamplerState sampler_PointRepeat;
+    SamplerState sampler_LinearRepeat;
+    SamplerState sampler_TrilinearRepeat;
+#endif
 
 float4 _ColorTexture_TexelSize;
 float4 _DepthTexture_TexelSize;
