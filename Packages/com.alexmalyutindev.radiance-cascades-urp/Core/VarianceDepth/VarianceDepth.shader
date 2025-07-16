@@ -18,9 +18,12 @@ Shader "Hidden/VarianceDepth"
             #pragma vertex Vertex
             #pragma fragment Fragment
 
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            #include "../Shaders/Common.hlsl"
             Texture2D<float> _BlitTexture;
             float4 _BlitTexture_TexelSize;
 
@@ -64,8 +67,11 @@ Shader "Hidden/VarianceDepth"
             #pragma vertex Vertex
             #pragma fragment Fragment
 
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../Shaders/Common.hlsl"
 
             Texture2D<float2> _BlitTexture;
             float4 _BlitTexture_TexelSize;
@@ -118,8 +124,11 @@ Shader "Hidden/VarianceDepth"
             #pragma vertex Vertex
             #pragma fragment Fragment
 
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../Shaders/Common.hlsl"
 
             Texture2D<float2> _BlitTexture;
             float4 _BlitTexture_TexelSize;

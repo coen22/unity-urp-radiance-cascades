@@ -83,7 +83,9 @@ Shader "Hidden/MinMaxDepth"
 
             #define SINGLE_CHANNEL
             #include "Common.hlsl"
+            #ifdef SAMPLER
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
+            #endif
             float2 _TargetResolution;
 
             float2 Fragment(Varyings input) : SV_TARGET
