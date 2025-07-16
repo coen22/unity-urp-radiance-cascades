@@ -1,5 +1,6 @@
 Radiance Cascades for Unity's URP
 ===
+Compatible with Unity **6.1** and Universal Render Pipeline **17.1**.
 
 This project is a recreation of Alexander Sannikov's Radiance Cascades technique in Unity with an attempt to generalize it for 3D case.
 
