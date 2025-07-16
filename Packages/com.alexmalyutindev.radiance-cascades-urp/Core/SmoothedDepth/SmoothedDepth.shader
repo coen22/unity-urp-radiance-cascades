@@ -23,6 +23,7 @@ Shader "Hidden/SmoothedDepth"
             #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            #include "Common.hlsl"
             Texture2D<float> _BlitTexture;
             float4 _BlitTexture_TexelSize;
             float2 _InputResolution;
@@ -87,6 +88,7 @@ Shader "Hidden/SmoothedDepth"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Common.hlsl"
 
             Texture2D<float> _BlitTexture;
             float4 _BlitTexture_TexelSize;

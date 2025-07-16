@@ -23,6 +23,7 @@ Shader "Hidden/VarianceDepth"
             #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            #include "Common.hlsl"
             Texture2D<float> _BlitTexture;
             float4 _BlitTexture_TexelSize;
 
@@ -70,6 +71,7 @@ Shader "Hidden/VarianceDepth"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Common.hlsl"
 
             Texture2D<float2> _BlitTexture;
             float4 _BlitTexture_TexelSize;
@@ -126,6 +128,7 @@ Shader "Hidden/VarianceDepth"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/GlobalSamplers.hlsl"
             #endif
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Common.hlsl"
 
             Texture2D<float2> _BlitTexture;
             float4 _BlitTexture_TexelSize;
