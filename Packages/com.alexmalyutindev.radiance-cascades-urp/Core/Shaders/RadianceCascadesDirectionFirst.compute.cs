@@ -76,13 +76,19 @@ namespace AlexMalyutinDev.RadianceCascades
 
                 cmd.SetComputeIntParam(_compute, "_CascadeLevel", cascadeLevel);
 
-                _compute.GetKernelThreadGroupSizes(kernel, out var x, out var y, out _);
+                // ComputeShader.GetKernelThreadGroupSizes is unreliable in some
+                // Unity versions when used with embedded packages. The thread
+                // group size for this kernel is known from the compute shader
+                // declaration: [numthreads(8, 4, 1)].
+                const int groupSizeX = 8;
+                const int groupSizeY = 4;
+
                 // TODO: Spawn only one cascade size Y groups, make all latitudinal ray in one thread?
                 cmd.DispatchCompute(
                     _compute,
                     kernel,
-                    Mathf.CeilToInt(cascadeBufferSize.x / 2 / x),
-                    Mathf.CeilToInt(cascadeBufferSize.y / (y * (1 << cascadeLevel))),
+                    Mathf.CeilToInt(cascadeBufferSize.x / 2 / groupSizeX),
+                    Mathf.CeilToInt(cascadeBufferSize.y / (groupSizeY * (1 << cascadeLevel))),
                     1
                 );
             }
