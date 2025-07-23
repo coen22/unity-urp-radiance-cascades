@@ -21,13 +21,13 @@ this upgrade.
   (e.g. `textureHandle`, `RenderGraphBuilder`).
 - [x] Ensure render targets (camera color, depth, intermediate buffers) are
   declared via Render Graph `ReadWriteTexture`/`CreateTexture` descriptors.
-- [ ] Expose `_GBuffer0` and any other buffers to the passes using Render Graph
+- [x] Expose `_GBuffer0` and any other buffers to the passes using Render Graph
   `ReadTexture`/`WriteTexture` semantics rather than manual `SetGlobalTexture`.
-- [ ] Replace `Blitter.BlitTexture` and `BlitUtils.BlitTexture` usages with
-  `RenderGraphUtils` alternatives if available.
+- [x] Replace `Blitter.BlitTexture` and `BlitUtils.BlitTexture` usages with
+  `RenderGraphUtils` alternatives.
 
 ## Pipeline integration
-- [ ] Update the renderer feature registration to use `AddRenderPasses` that
+- [x] Update the renderer feature registration to use `AddRenderPasses` that
   enqueues Render Graph passes.
 - [ ] Verify the pass ordering so that radiance cascades are combined with the
   direct and forward lighting passes correctly.

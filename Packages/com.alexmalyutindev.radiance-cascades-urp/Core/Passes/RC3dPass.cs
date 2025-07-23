@@ -130,7 +130,6 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
 
         sampleKey = "Combine";
         cmd.BeginSample(sampleKey);
-        cmd.SetGlobalTexture("_GBuffer0", colorTexture);
         cmd.SetRenderTarget(
             colorTexture,
             RenderBufferLoadAction.Load,
@@ -139,7 +138,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
             RenderBufferLoadAction.Load,
             RenderBufferStoreAction.Store
         );
-        Blitter.BlitTexture(cmd, _cascades[0], new Vector4(1f / 2f, 1f / 3f, 0, 0), _blitMaterial, 1);
+        RenderGraphUtils.BlitTexture(ctx, _cascades[0], _blitMaterial, 1);
         cmd.EndSample(sampleKey);
     }
 
@@ -153,18 +152,16 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
         public TextureHandle[] cascades;
     }
 
-    internal void ExecutePass(CommandBuffer cmd, ref RenderingData renderingData)
+    internal void ExecutePass(in RasterGraphContext ctx, ref RenderingData renderingData, TextureHandle color, TextureHandle depth)
     {
-        var colorTexture = renderingData.cameraData.renderer.cameraColorTargetHandle;
-        var depthTexture = renderingData.cameraData.renderer.cameraDepthTargetHandle;
-
-        var colorTextureRT = colorTexture.rt;
+        var cmd = ctx.cmd;
+        var colorTextureRT = color.rt;
         if (colorTextureRT == null)
             return;
 
         using (new ProfilingScope(cmd, _profilingSampler))
         {
-            Render(cmd, ref renderingData, colorTexture, depthTexture);
+            Render(cmd, ref renderingData, color, depth);
         }
     }
 
@@ -193,12 +190,12 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
             builder.UseTexture(passData.cascades[i]);
         }
 
-        builder.UseTexture(passData.color);
-        builder.UseTexture(passData.depth);
+        builder.ReadWriteTexture(passData.color);
+        builder.ReadWriteTexture(passData.depth);
 
         builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
         {
-            data.pass.ExecutePass(ctx.cmd, ref data.renderingData);
+            data.pass.ExecutePass(ctx, ref data.renderingData, data.color, data.depth);
         });
     }
 #endif

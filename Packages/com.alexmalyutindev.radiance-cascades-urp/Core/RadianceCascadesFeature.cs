@@ -70,6 +70,34 @@ namespace AlexMalyutinDev.RadianceCascades
             };
         }
 
+#if UNITY_6000_1_OR_NEWER
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            ref var renderingData = ref frameData.Get<RenderingData>();
+            if (renderingData.cameraData.isPreviewCamera)
+                return;
+
+            var volume = VolumeManager.instance.stack.GetComponent<RadianceCascades>();
+            var renderType = volume.RenderingType.value;
+            if (!volume.active || renderType == RenderingType.None)
+                return;
+
+            _radianceCascadesRenderingData.Cascade0Size = new Vector2Int(2048 / 8, 1024 / 8);
+
+            if (renderType == RenderingType.Simple2dProbes)
+            {
+                _rc2dPass.RecordRenderGraph(renderGraph, renderingData);
+            }
+            else if (renderType == RenderingType.CubeMapProbes)
+            {
+                _radianceCascadesPass3d.RecordRenderGraph(renderGraph, renderingData);
+            }
+            else if (renderType == RenderingType.DirectionFirstProbes)
+            {
+                _directionFirstRcPass.RecordRenderGraph(renderGraph, renderingData);
+            }
+        }
+#else
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             if (renderingData.cameraData.isPreviewCamera)
@@ -103,6 +131,7 @@ namespace AlexMalyutinDev.RadianceCascades
                 renderer.EnqueuePass(_directionFirstRcPass);
             }
         }
+#endif
 
         protected override void Dispose(bool disposing)
         {
