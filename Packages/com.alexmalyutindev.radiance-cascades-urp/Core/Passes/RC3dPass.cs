@@ -1,10 +1,10 @@
 using System;
 using AlexMalyutinDev.RadianceCascades;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 #if UNITY_6000_1_OR_NEWER
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
 #endif
 
@@ -148,6 +148,9 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
     {
         public RenderingData renderingData;
         public RadianceCascades3dPass pass;
+        public TextureHandle color;
+        public TextureHandle depth;
+        public TextureHandle[] cascades;
     }
 
     internal void ExecutePass(CommandBuffer cmd, ref RenderingData renderingData)
@@ -170,6 +173,29 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
         using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(RadianceCascades3dPass), out var passData);
         passData.renderingData = renderingData;
         passData.pass = this;
+
+        passData.color = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraColorTargetHandle);
+        passData.depth = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraDepthTargetHandle);
+
+        passData.cascades = new TextureHandle[CascadesCount];
+        const int scale = 4;
+        int width = (2 << CascadesCount) * 2 * scale;
+        int height = (1 << CascadesCount) * 3 * scale;
+        for (int i = 0; i < CascadesCount; i++)
+        {
+            var desc = new TextureDesc(width, height)
+            {
+                colorFormat = GraphicsFormat.R16G16B16A16_SFloat,
+                name = Cascade3dNames[i],
+                enableRandomWrite = true
+            };
+            passData.cascades[i] = renderGraph.CreateTexture(desc);
+            builder.UseTexture(passData.cascades[i]);
+        }
+
+        builder.UseTexture(passData.color);
+        builder.UseTexture(passData.depth);
+
         builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
         {
             data.pass.ExecutePass(ctx.cmd, ref data.renderingData);

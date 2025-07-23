@@ -7,7 +7,7 @@ this upgrade.
 
 ## General steps
 - [x] Update the URP package in `Packages/manifest.json` to `com.unity.render-pipelines.universal` version `17.x` if not already using the latest patch.
-- [ ] Review release notes and migration guides from Unity for URP 17 and the
+- [x] Review release notes and migration guides from Unity for URP 17 and the
   Render Graph API.
 - [x] Clean up obsolete API usage warnings (e.g. `Configure` and `Execute` methods
   in `ScriptableRenderPass`). These will be replaced with Render Graph render
@@ -17,9 +17,9 @@ this upgrade.
   passes. Each implements a basic `RecordRenderGraph` method.
 - [x] Convert pass data structs to classes for Render Graph integration.
 - [x] Mark HiZDepthPass Configure and Execute methods obsolete.
-- [ ] Replace direct calls to `CommandBuffer` setup with Render Graph resources
+- [x] Replace direct calls to `CommandBuffer` setup with Render Graph resources
   (e.g. `textureHandle`, `RenderGraphBuilder`).
-- [ ] Ensure render targets (camera color, depth, intermediate buffers) are
+- [x] Ensure render targets (camera color, depth, intermediate buffers) are
   declared via Render Graph `ReadWriteTexture`/`CreateTexture` descriptors.
 - [ ] Expose `_GBuffer0` and any other buffers to the passes using Render Graph
   `ReadTexture`/`WriteTexture` semantics rather than manual `SetGlobalTexture`.

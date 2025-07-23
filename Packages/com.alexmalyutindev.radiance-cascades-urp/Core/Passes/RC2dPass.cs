@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 #if UNITY_6000_1_OR_NEWER
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
 #endif
 
@@ -189,6 +190,9 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
     {
         public RenderingData renderingData;
         public RC2dPass pass;
+        public TextureHandle color;
+        public TextureHandle depth;
+        public TextureHandle[] cascades;
     }
 
     internal void ExecutePass(CommandBuffer cmd, ref RenderingData renderingData)
@@ -211,6 +215,26 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(RC2dPass), out var passData);
         passData.renderingData = renderingData;
         passData.pass = this;
+
+        passData.color = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraColorTargetHandle);
+        passData.depth = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraDepthTargetHandle);
+
+        passData.cascades = new TextureHandle[CascadesCount];
+        for (int i = 0; i < CascadesCount; i++)
+        {
+            var desc = new TextureDesc(Resolutions[i].x, Resolutions[i].y)
+            {
+                colorFormat = GraphicsFormat.R16G16B16A16_SFloat,
+                name = CascadeNames[i],
+                enableRandomWrite = true
+            };
+            passData.cascades[i] = renderGraph.CreateTexture(desc);
+            builder.UseTexture(passData.cascades[i]);
+        }
+
+        builder.UseTexture(passData.color);
+        builder.UseTexture(passData.depth);
+
         builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
         {
             data.pass.ExecutePass(ctx.cmd, ref data.renderingData);
