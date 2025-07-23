@@ -639,7 +639,7 @@ Shader "Hidden/RadianceCascade/Blit"
                 half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_LinearClamp, input.texcoord, 0);
                 float3 normalWS = SAMPLE_TEXTURE2D_LOD(_GBuffer2, sampler_LinearClamp, input.texcoord, 0);
                 float4 radiance = SampleSH2(input.texcoord, normalize(normalWS));
-                return radiance * gbuffer0;
+                return radiance + gbuffer0;
             }
             ENDHLSL
         }
