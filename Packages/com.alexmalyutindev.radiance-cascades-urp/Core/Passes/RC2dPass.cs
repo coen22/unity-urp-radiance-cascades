@@ -144,7 +144,14 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         sampleKey = "Combine";
         cmd.BeginSample(sampleKey);
         {
-            cmd.SetRenderTarget(colorTexture, depthTexture);
+            cmd.SetRenderTarget(
+                colorTexture,
+                RenderBufferLoadAction.Load,
+                RenderBufferStoreAction.Store,
+                depthTexture,
+                RenderBufferLoadAction.Load,
+                RenderBufferStoreAction.Store
+            );
             // TODO: Do blit into intermediate buffer with bilinear filter, then blit onto the screen
             BlitUtils.BlitTexture(cmd, _cascades[0], _blit, 0);
         }

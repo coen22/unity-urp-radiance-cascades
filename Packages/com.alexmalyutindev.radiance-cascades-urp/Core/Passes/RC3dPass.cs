@@ -125,7 +125,14 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
 
         sampleKey = "Combine";
         cmd.BeginSample(sampleKey);
-        cmd.SetRenderTarget(colorTexture, depthTexture);
+        cmd.SetRenderTarget(
+            colorTexture,
+            RenderBufferLoadAction.Load,
+            RenderBufferStoreAction.Store,
+            depthTexture,
+            RenderBufferLoadAction.Load,
+            RenderBufferStoreAction.Store
+        );
         Blitter.BlitTexture(cmd, _cascades[0], new Vector4(1f / 2f, 1f / 3f, 0, 0), _blitMaterial, 1);
         cmd.EndSample(sampleKey);
     }
