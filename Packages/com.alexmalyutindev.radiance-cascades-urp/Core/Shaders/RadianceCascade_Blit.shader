@@ -89,7 +89,8 @@ Shader "Hidden/RadianceCascade/Blit"
                     w.y
                 );
 
-                return color;
+                half4 gbuffer0 = SAMPLE_TEXTURE2D(_GBuffer0, sampler_PointClamp, input.texcoord);
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -225,7 +226,8 @@ Shader "Hidden/RadianceCascade/Blit"
                     w.y
                 );
 
-                return color;
+                half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_PointClamp, input.texcoord, 0);
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -363,7 +365,8 @@ Shader "Hidden/RadianceCascade/Blit"
                     }
                 }
 
-                return color;
+                half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_PointClamp, input.texcoord, 0);
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -443,7 +446,8 @@ Shader "Hidden/RadianceCascade/Blit"
                 // float depth1 = SampleSceneDepth(uv);
                 // color *= (depth0 > depth1);
 
-                return color;
+                half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_PointClamp, input.texcoord, 0);
+                return color + gbuffer0;
             }
             ENDHLSL
         }
