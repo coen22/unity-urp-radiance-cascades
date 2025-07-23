@@ -3,6 +3,10 @@ using InternalBridge;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_6000_1_OR_NEWER
+using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 namespace AlexMalyutinDev.RadianceCascades
 {
@@ -29,6 +33,7 @@ namespace AlexMalyutinDev.RadianceCascades
             _renderingData = renderingData;
         }
 
+        [Obsolete("Use RecordRenderGraph", true)]
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
             // 512 => 512 / 8 = 64 probes in row
@@ -59,6 +64,7 @@ namespace AlexMalyutinDev.RadianceCascades
             RenderingUtils.ReAllocateIfNeeded(ref _intermediateBuffer, desc, name: "RadianceBuffer");
         }
 
+        [Obsolete("Use RecordRenderGraph", true)]
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             var radianceCascades = VolumeManager.instance.stack.GetComponent<RadianceCascades>();
@@ -69,7 +75,7 @@ namespace AlexMalyutinDev.RadianceCascades
 
             var cmd = CommandBufferPool.Get();
 
-            using (new ProfilingScope(cmd, profilingSampler))
+            using (new ProfilingScope((CommandBuffer)cmd, profilingSampler))
             {
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
@@ -90,11 +96,19 @@ namespace AlexMalyutinDev.RadianceCascades
                     cmd.BeginSample("RadianceCascade.Combine");
                     {
                         cmd.SetRenderTarget(_intermediateBuffer);
-                        cmd.SetGlobalTexture(ShaderIds.GBuffer3, renderer.GetGBuffer(3));
+                        cmd.SetGlobalTexture(ShaderIds.GBuffer3, renderingData.cameraData.renderer.GetGBuffer(3));
                         cmd.SetGlobalTexture(ShaderIds.MinMaxDepth, _renderingData.MinMaxDepth);
                         BlitUtils.BlitTexture(cmd, _cascade0, _blitMaterial, 2);
 
-                        cmd.SetRenderTarget(colorBuffer, depthBuffer);
+                        cmd.SetRenderTarget(
+                            colorBuffer,
+                            RenderBufferLoadAction.Load,
+                            RenderBufferStoreAction.Store,
+                            depthBuffer,
+                            RenderBufferLoadAction.Load,
+                            RenderBufferStoreAction.Store
+                        );
+                        cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                         BlitUtils.BlitTexture(cmd, _intermediateBuffer, _blitMaterial, 3);
                     }
                     cmd.EndSample("RadianceCascade.Combine");
@@ -112,7 +126,15 @@ namespace AlexMalyutinDev.RadianceCascades
                     );
 
                     cmd.BeginSample("RadianceCascade.BlitSH");
-                    cmd.SetRenderTarget(colorBuffer, depthBuffer);
+                    cmd.SetRenderTarget(
+                        colorBuffer,
+                        RenderBufferLoadAction.Load,
+                        RenderBufferStoreAction.Store,
+                        depthBuffer,
+                        RenderBufferLoadAction.Load,
+                        RenderBufferStoreAction.Store
+                    );
+                    cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                     cmd.SetGlobalMatrix("_ViewToWorld", renderingData.cameraData.GetViewMatrix().inverse);
                     cmd.SetGlobalTexture("_MinMaxDepth", _renderingData.MinMaxDepth);
                     BlitUtils.BlitTexture(cmd, _radianceSH, _blitMaterial, 4);
@@ -124,6 +146,105 @@ namespace AlexMalyutinDev.RadianceCascades
             cmd.Clear();
             CommandBufferPool.Release(cmd);
         }
+
+#if UNITY_6000_1_OR_NEWER
+        private class PassData
+        {
+            public RenderingData renderingData;
+            public DirectionFirstRCPass pass;
+            public TextureHandle color;
+            public TextureHandle depth;
+        }
+
+        internal void ExecutePass(in RasterGraphContext ctx, ref RenderingData renderingData, TextureHandle color, TextureHandle depth)
+        {
+            var cmd = ctx.cmd;
+            var radianceCascades = VolumeManager.instance.stack.GetComponent<RadianceCascades>();
+
+            var colorBuffer = color.rt;
+            var depthBuffer = depth.rt;
+
+            using (new ProfilingScope((CommandBuffer)cmd, profilingSampler))
+            {
+                _compute.RenderMerge(
+                    cmd,
+                    ref renderingData.cameraData,
+                    depthBuffer,
+                    _renderingData.MinMaxDepth,
+                    _renderingData.VarianceDepth,
+                    _renderingData.BlurredColorBuffer,
+                    radianceCascades.RayScale.value,
+                    ref _cascade0
+                );
+
+                if (!radianceCascades.UseSH.value)
+                {
+                    cmd.BeginSample("RadianceCascade.Combine");
+                    {
+                        cmd.SetRenderTarget(_intermediateBuffer);
+                        cmd.SetGlobalTexture(ShaderIds.GBuffer3, renderingData.cameraData.renderer.GetGBuffer(3));
+                        cmd.SetGlobalTexture(ShaderIds.MinMaxDepth, _renderingData.MinMaxDepth);
+                        BlitUtils.BlitTexture(cmd, _cascade0, _blitMaterial, 2);
+
+                        cmd.SetRenderTarget(
+                            colorBuffer,
+                            RenderBufferLoadAction.Load,
+                            RenderBufferStoreAction.Store,
+                            depthBuffer,
+                            RenderBufferLoadAction.Load,
+                            RenderBufferStoreAction.Store
+                        );
+                        cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
+                        BlitUtils.BlitTexture(cmd, _intermediateBuffer, _blitMaterial, 3);
+                    }
+                    cmd.EndSample("RadianceCascade.Combine");
+                }
+                else
+                {
+                    _compute.CombineSH(
+                        cmd,
+                        ref renderingData.cameraData,
+                        _cascade0,
+                        _renderingData.MinMaxDepth,
+                        _renderingData.VarianceDepth,
+                        _radianceSH
+                    );
+
+                    cmd.BeginSample("RadianceCascade.BlitSH");
+                    cmd.SetRenderTarget(
+                        colorBuffer,
+                        RenderBufferLoadAction.Load,
+                        RenderBufferStoreAction.Store,
+                        depthBuffer,
+                        RenderBufferLoadAction.Load,
+                        RenderBufferStoreAction.Store
+                    );
+                    cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
+                    cmd.SetGlobalMatrix("_ViewToWorld", renderingData.cameraData.GetViewMatrix().inverse);
+                    cmd.SetGlobalTexture("_MinMaxDepth", _renderingData.MinMaxDepth);
+                    BlitUtils.BlitTexture(cmd, _radianceSH, _blitMaterial, 4);
+                    cmd.EndSample("RadianceCascade.BlitSH");
+                }
+            }
+        }
+
+        public void RecordRenderGraph(RenderGraph renderGraph, in RenderingData renderingData)
+        {
+            using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(DirectionFirstRCPass), out var passData);
+            passData.renderingData = renderingData;
+            passData.pass = this;
+            passData.color = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraColorTargetHandle);
+            passData.depth = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraDepthTargetHandle);
+
+            builder.ReadWriteTexture(passData.color);
+            builder.ReadWriteTexture(passData.depth);
+
+            builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+            {
+                data.pass.ExecutePass(ctx, ref data.renderingData, data.color, data.depth);
+            });
+        }
+#endif
 
         public void Dispose()
         {

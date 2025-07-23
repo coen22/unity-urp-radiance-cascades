@@ -90,12 +90,7 @@ Shader "Hidden/RadianceCascade/Blit"
                 );
 
                 half4 gbuffer0 = SAMPLE_TEXTURE2D(_GBuffer0, sampler_PointClamp, input.texcoord);
-                return color * gbuffer0;
-
-                half3 normalWS = SampleSceneNormals(input.texcoord);
-                half angleFade = 1.0h - abs(dot(normalWS, -_CameraForward));
-
-                return color * gbuffer0 * angleFade;
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -232,7 +227,7 @@ Shader "Hidden/RadianceCascade/Blit"
                 );
 
                 half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_PointClamp, input.texcoord, 0);
-                return color * gbuffer0;
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -370,7 +365,8 @@ Shader "Hidden/RadianceCascade/Blit"
                     }
                 }
 
-                return color;
+                half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_PointClamp, input.texcoord, 0);
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -451,9 +447,7 @@ Shader "Hidden/RadianceCascade/Blit"
                 // color *= (depth0 > depth1);
 
                 half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_PointClamp, input.texcoord, 0);
-                // half4 gbuffer3 = SAMPLE_TEXTURE2D_LOD(_GBuffer3, sampler_PointClamp, input.texcoord, 0);
-                // gbuffer0 += gbuffer3;
-                return color * gbuffer0;
+                return color + gbuffer0;
             }
             ENDHLSL
         }
@@ -645,7 +639,7 @@ Shader "Hidden/RadianceCascade/Blit"
                 half4 gbuffer0 = SAMPLE_TEXTURE2D_LOD(_GBuffer0, sampler_LinearClamp, input.texcoord, 0);
                 float3 normalWS = SAMPLE_TEXTURE2D_LOD(_GBuffer2, sampler_LinearClamp, input.texcoord, 0);
                 float4 radiance = SampleSH2(input.texcoord, normalize(normalWS));
-                return radiance * gbuffer0;
+                return radiance + gbuffer0;
             }
             ENDHLSL
         }

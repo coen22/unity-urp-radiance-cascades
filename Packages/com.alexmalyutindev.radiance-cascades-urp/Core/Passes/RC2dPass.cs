@@ -3,6 +3,10 @@ using AlexMalyutinDev.RadianceCascades;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_6000_1_OR_NEWER
+using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class RC2dPass : ScriptableRenderPass, IDisposable
 {
@@ -40,6 +44,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         // ConfigureInput(ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Color);
     }
 
+    [Obsolete("Use RecordRenderGraph", true)]
     public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
     {
         // TODO: Resolution settings?
@@ -64,6 +69,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         }
     }
 
+    [Obsolete("Use RecordRenderGraph", true)]
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         var cmd = CommandBufferPool.Get();
@@ -77,7 +83,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
             return;
         }
 
-        using (new ProfilingScope(cmd, _profilingSampler))
+        using (new ProfilingScope((CommandBuffer)cmd, _profilingSampler))
         {
             RenderCascades(renderingData, cmd, colorTexture, depthTexture);
             context.ExecuteCommandBuffer(cmd);
@@ -144,7 +150,15 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         sampleKey = "Combine";
         cmd.BeginSample(sampleKey);
         {
-            cmd.SetRenderTarget(colorTexture, depthTexture);
+            cmd.SetRenderTarget(
+                colorTexture,
+                RenderBufferLoadAction.Load,
+                RenderBufferStoreAction.Store,
+                depthTexture,
+                RenderBufferLoadAction.Load,
+                RenderBufferStoreAction.Store
+            );
+            cmd.SetGlobalTexture("_GBuffer0", colorTexture);
             // TODO: Do blit into intermediate buffer with bilinear filter, then blit onto the screen
             BlitUtils.BlitTexture(cmd, _cascades[0], _blit, 0);
         }
@@ -170,6 +184,101 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
 
         cmd.EndSample("Preview");
     }
+
+#if UNITY_6000_1_OR_NEWER
+    private class PassData
+    {
+        public RenderingData renderingData;
+        public RC2dPass pass;
+        public TextureHandle color;
+        public TextureHandle depth;
+        public TextureHandle[] cascades;
+    }
+
+    internal void ExecutePass(in RasterGraphContext ctx, ref RenderingData renderingData, TextureHandle color, TextureHandle depth, TextureHandle[] cascades)
+    {
+        var cmd = ctx.cmd;
+        var colorTextureRT = color.rt;
+        if (colorTextureRT == null)
+            return;
+
+        using (new ProfilingScope((CommandBuffer)cmd, _profilingSampler))
+        {
+            RenderCascadesRG(ctx, renderingData, cmd, color, depth, cascades);
+        }
+    }
+
+    private void RenderCascadesRG(
+        in RasterGraphContext ctx,
+        in RenderingData renderingData,
+        CommandBuffer cmd,
+        TextureHandle color,
+        TextureHandle depth,
+        TextureHandle[] cascades
+    )
+    {
+        var colorRT = color.rt;
+        var depthRT = depth.rt;
+
+        for (int level = 0; level < cascades.Length; level++)
+        {
+            var target = cascades[level].rt;
+            _radianceCascadeCs.RenderCascade(cmd, colorRT, depthRT, 2 << level, level, target);
+        }
+
+        for (int level = cascades.Length - 1; level > 0; level--)
+        {
+            var lower = cascades[level - 1].rt;
+            var upper = cascades[level].rt;
+            _radianceCascadeCs.MergeCascades(cmd, lower, upper, level - 1);
+        }
+
+        cmd.SetRenderTarget(
+            colorRT,
+            RenderBufferLoadAction.Load,
+            RenderBufferStoreAction.Store,
+            depthRT,
+            RenderBufferLoadAction.Load,
+            RenderBufferStoreAction.Store
+        );
+        cmd.SetGlobalTexture("_GBuffer0", colorRT);
+        RenderGraphUtils.BlitTexture(ctx, cascades[0], _blit, 0);
+    }
+
+    public void RecordRenderGraph(RenderGraph renderGraph, in RenderingData renderingData)
+    {
+        using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(RC2dPass), out var passData);
+        passData.renderingData = renderingData;
+        passData.pass = this;
+
+        passData.color = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraColorTargetHandle);
+        passData.depth = renderGraph.ImportTexture(renderingData.cameraData.renderer.cameraDepthTargetHandle);
+
+        passData.cascades = new TextureHandle[CascadesCount];
+        for (int i = 0; i < CascadesCount; i++)
+        {
+            var desc = new TextureDesc(Resolutions[i].x, Resolutions[i].y)
+            {
+                colorFormat = GraphicsFormat.R16G16B16A16_SFloat,
+                name = CascadeNames[i],
+                enableRandomWrite = true
+            };
+            passData.cascades[i] = renderGraph.CreateTexture(desc);
+            builder.UseTexture(passData.cascades[i]);
+        }
+
+        builder.UseTexture(passData.color);
+        builder.UseTexture(passData.depth);
+
+        builder.ReadWriteTexture(passData.color);
+        builder.ReadWriteTexture(passData.depth);
+
+        builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+        {
+            data.pass.ExecutePass(ctx, ref data.renderingData, data.color, data.depth, data.cascades);
+        });
+    }
+#endif
 
 
     public void Dispose()

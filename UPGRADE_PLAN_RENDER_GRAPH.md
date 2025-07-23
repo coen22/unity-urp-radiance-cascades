@@ -1,0 +1,39 @@
+# TODO: Upgrade to URP 17 Render Graph API
+
+The project currently uses custom ScriptableRenderPass classes that rely on the
+legacy API. Upgrading to URP 17 requires migrating these passes to the new
+Render Graph framework. Below is a high level plan of work required to perform
+this upgrade.
+
+## General steps
+- [x] Update the URP package in `Packages/manifest.json` to `com.unity.render-pipelines.universal` version `17.x` if not already using the latest patch.
+- [x] Review release notes and migration guides from Unity for URP 17 and the
+  Render Graph API.
+- [x] Clean up obsolete API usage warnings (e.g. `Configure` and `Execute` methods
+  in `ScriptableRenderPass`). These will be replaced with Render Graph render
+  pass implementations.
+
+- [x] Convert `RC2dPass`, `RC3dPass` and `DirectionFirstRCPass` to Render Graph
+  passes. Each implements a basic `RecordRenderGraph` method.
+- [x] Convert pass data structs to classes for Render Graph integration.
+- [x] Mark HiZDepthPass Configure and Execute methods obsolete.
+- [x] Replace direct calls to `CommandBuffer` setup with Render Graph resources
+  (e.g. `textureHandle`, `RenderGraphBuilder`).
+- [x] Ensure render targets (camera color, depth, intermediate buffers) are
+  declared via Render Graph `ReadWriteTexture`/`CreateTexture` descriptors.
+- [x] Expose `_GBuffer0` and any other buffers to the passes using Render Graph
+  `ReadTexture`/`WriteTexture` semantics rather than manual `SetGlobalTexture`.
+- [x] Replace `Blitter.BlitTexture` and `BlitUtils.BlitTexture` usages with
+  `RenderGraphUtils` alternatives.
+
+## Pipeline integration
+- [x] Update the renderer feature registration to use `AddRenderPasses` that
+  enqueues Render Graph passes.
+- [x] Verify the pass ordering so that radiance cascades are combined with the
+  direct and forward lighting passes correctly.
+
+## Testing
+- [x] Test scenes with forward and deferred rendering to ensure direct light is
+  preserved when applying radiance cascades.
+- [x] Validate that build warnings related to obsolete API usage are resolved.
+- [x] Profile the render graph implementation for any regressions.

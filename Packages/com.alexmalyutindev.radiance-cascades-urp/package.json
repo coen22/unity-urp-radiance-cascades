@@ -5,6 +5,6 @@
   "description": "TODO:",
   "unity": "6.1",
   "dependencies": {
-    "com.unity.render-pipelines.universal": "17.1.0"
+    "com.unity.render-pipelines.universal": "17.1.3"
   }
 }

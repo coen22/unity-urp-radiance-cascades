@@ -9,6 +9,12 @@ namespace AlexMalyutinDev.RadianceCascades
         private static readonly int BlitTextureId = Shader.PropertyToID("_BlitTexture");
         private static MaterialPropertyBlock _props;
 
+        internal static Mesh GetQuadMesh()
+        {
+            Initialize();
+            return s_QuadMesh;
+        }
+
         public static void Blit(CommandBuffer cmd, Material material, int pass)
         {
             Initialize();
