@@ -159,7 +159,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
                 RenderBufferStoreAction.Store
             );
             // TODO: Do blit into intermediate buffer with bilinear filter, then blit onto the screen
-            RenderGraphUtils.BlitTexture(ctx, _cascades[0], _blit, 0);
+            BlitUtils.BlitTexture(cmd, _cascades[0], _blit, 0);
         }
         cmd.EndSample(sampleKey);
     }
@@ -194,7 +194,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         public TextureHandle[] cascades;
     }
 
-    internal void ExecutePass(in RasterGraphContext ctx, ref RenderingData renderingData, TextureHandle color, TextureHandle depth)
+    internal void ExecutePass(in RasterGraphContext ctx, ref RenderingData renderingData, TextureHandle color, TextureHandle depth, TextureHandle[] cascades)
     {
         var cmd = ctx.cmd;
         var colorTextureRT = color.rt;
@@ -203,8 +203,44 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
 
         using (new ProfilingScope(cmd, _profilingSampler))
         {
-            RenderCascades(renderingData, cmd, color, depth);
+            RenderCascadesRG(ctx, renderingData, cmd, color, depth, cascades);
         }
+    }
+
+    private static void RenderCascadesRG(
+        in RasterGraphContext ctx,
+        in RenderingData renderingData,
+        CommandBuffer cmd,
+        TextureHandle color,
+        TextureHandle depth,
+        TextureHandle[] cascades
+    )
+    {
+        var colorRT = color.rt;
+        var depthRT = depth.rt;
+
+        for (int level = 0; level < cascades.Length; level++)
+        {
+            var target = cascades[level].rt;
+            _radianceCascadeCs.RenderCascade(cmd, colorRT, depthRT, 2 << level, level, target);
+        }
+
+        for (int level = cascades.Length - 1; level > 0; level--)
+        {
+            var lower = cascades[level - 1].rt;
+            var upper = cascades[level].rt;
+            _radianceCascadeCs.MergeCascades(cmd, lower, upper, level - 1);
+        }
+
+        cmd.SetRenderTarget(
+            colorRT,
+            RenderBufferLoadAction.Load,
+            RenderBufferStoreAction.Store,
+            depthRT,
+            RenderBufferLoadAction.Load,
+            RenderBufferStoreAction.Store
+        );
+        RenderGraphUtils.BlitTexture(ctx, cascades[0], _blit, 0);
     }
 
     public void RecordRenderGraph(RenderGraph renderGraph, in RenderingData renderingData)
@@ -237,7 +273,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
 
         builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
         {
-            data.pass.ExecutePass(ctx, ref data.renderingData, data.color, data.depth);
+            data.pass.ExecutePass(ctx, ref data.renderingData, data.color, data.depth, data.cascades);
         });
     }
 #endif

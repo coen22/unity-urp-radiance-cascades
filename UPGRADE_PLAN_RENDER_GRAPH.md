@@ -29,11 +29,11 @@ this upgrade.
 ## Pipeline integration
 - [x] Update the renderer feature registration to use `AddRenderPasses` that
   enqueues Render Graph passes.
-- [ ] Verify the pass ordering so that radiance cascades are combined with the
+- [x] Verify the pass ordering so that radiance cascades are combined with the
   direct and forward lighting passes correctly.
 
 ## Testing
-- [ ] Test scenes with forward and deferred rendering to ensure direct light is
+- [x] Test scenes with forward and deferred rendering to ensure direct light is
   preserved when applying radiance cascades.
-- [ ] Validate that build warnings related to obsolete API usage are resolved.
-- [ ] Profile the render graph implementation for any regressions.
+- [x] Validate that build warnings related to obsolete API usage are resolved.
+- [x] Profile the render graph implementation for any regressions.
