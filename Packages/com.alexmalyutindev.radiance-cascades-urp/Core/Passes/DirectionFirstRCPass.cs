@@ -92,6 +92,7 @@ namespace AlexMalyutinDev.RadianceCascades
                         cmd.SetRenderTarget(_intermediateBuffer);
                         cmd.SetGlobalTexture(ShaderIds.GBuffer3, renderer.GetGBuffer(3));
                         cmd.SetGlobalTexture(ShaderIds.MinMaxDepth, _renderingData.MinMaxDepth);
+                        cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                         BlitUtils.BlitTexture(cmd, _cascade0, _blitMaterial, 2);
 
                         cmd.SetRenderTarget(
@@ -119,6 +120,7 @@ namespace AlexMalyutinDev.RadianceCascades
                     );
 
                     cmd.BeginSample("RadianceCascade.BlitSH");
+                    cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                     cmd.SetRenderTarget(
                         colorBuffer,
                         RenderBufferLoadAction.Load,

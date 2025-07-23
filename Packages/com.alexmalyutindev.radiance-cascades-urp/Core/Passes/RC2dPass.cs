@@ -144,6 +144,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         sampleKey = "Combine";
         cmd.BeginSample(sampleKey);
         {
+            cmd.SetGlobalTexture("_GBuffer0", colorTexture);
             cmd.SetRenderTarget(
                 colorTexture,
                 RenderBufferLoadAction.Load,

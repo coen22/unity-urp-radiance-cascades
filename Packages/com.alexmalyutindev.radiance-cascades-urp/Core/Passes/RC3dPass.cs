@@ -125,6 +125,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
 
         sampleKey = "Combine";
         cmd.BeginSample(sampleKey);
+        cmd.SetGlobalTexture("_GBuffer0", colorTexture);
         cmd.SetRenderTarget(
             colorTexture,
             RenderBufferLoadAction.Load,
