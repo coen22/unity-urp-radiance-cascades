@@ -3,6 +3,10 @@ using InternalBridge;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_6000_1_OR_NEWER
+using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 namespace AlexMalyutinDev.RadianceCascades
 {
@@ -102,6 +106,7 @@ namespace AlexMalyutinDev.RadianceCascades
                             RenderBufferLoadAction.Load,
                             RenderBufferStoreAction.Store
                         );
+                        cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                         BlitUtils.BlitTexture(cmd, _intermediateBuffer, _blitMaterial, 3);
                     }
                     cmd.EndSample("RadianceCascade.Combine");
@@ -127,6 +132,7 @@ namespace AlexMalyutinDev.RadianceCascades
                         RenderBufferLoadAction.Load,
                         RenderBufferStoreAction.Store
                     );
+                    cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                     cmd.SetGlobalMatrix("_ViewToWorld", renderingData.cameraData.GetViewMatrix().inverse);
                     cmd.SetGlobalTexture("_MinMaxDepth", _renderingData.MinMaxDepth);
                     BlitUtils.BlitTexture(cmd, _radianceSH, _blitMaterial, 4);
@@ -186,6 +192,7 @@ namespace AlexMalyutinDev.RadianceCascades
                             RenderBufferLoadAction.Load,
                             RenderBufferStoreAction.Store
                         );
+                        cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                         BlitUtils.BlitTexture(cmd, _intermediateBuffer, _blitMaterial, 3);
                     }
                     cmd.EndSample("RadianceCascade.Combine");
@@ -210,6 +217,7 @@ namespace AlexMalyutinDev.RadianceCascades
                         RenderBufferLoadAction.Load,
                         RenderBufferStoreAction.Store
                     );
+                    cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
                     cmd.SetGlobalMatrix("_ViewToWorld", renderingData.cameraData.GetViewMatrix().inverse);
                     cmd.SetGlobalTexture("_MinMaxDepth", _renderingData.MinMaxDepth);
                     BlitUtils.BlitTexture(cmd, _radianceSH, _blitMaterial, 4);

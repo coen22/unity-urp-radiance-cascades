@@ -138,6 +138,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
             RenderBufferLoadAction.Load,
             RenderBufferStoreAction.Store
         );
+        cmd.SetGlobalTexture("_GBuffer0", colorTexture);
         BlitUtils.BlitTexture(cmd, _cascades[0], _blitMaterial, 1);
         cmd.EndSample(sampleKey);
     }
@@ -197,6 +198,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
             RenderBufferLoadAction.Load,
             RenderBufferStoreAction.Store
         );
+        cmd.SetGlobalTexture("_GBuffer0", colorRT);
         RenderGraphUtils.BlitTexture(ctx, cascades[0], _blitMaterial, 1);
     }
 

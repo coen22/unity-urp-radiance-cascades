@@ -5,6 +5,9 @@ using AlexMalyutinDev.RadianceCascades.VarianceDepth;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_6000_1_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 namespace AlexMalyutinDev.RadianceCascades
 {
@@ -97,7 +100,8 @@ namespace AlexMalyutinDev.RadianceCascades
                 _directionFirstRcPass.RecordRenderGraph(renderGraph, renderingData);
             }
         }
-#else
+#endif
+
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             if (renderingData.cameraData.isPreviewCamera)
@@ -131,7 +135,7 @@ namespace AlexMalyutinDev.RadianceCascades
                 renderer.EnqueuePass(_directionFirstRcPass);
             }
         }
-#endif
+
 
         protected override void Dispose(bool disposing)
         {

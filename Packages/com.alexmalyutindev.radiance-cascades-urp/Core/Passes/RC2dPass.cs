@@ -158,6 +158,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
                 RenderBufferLoadAction.Load,
                 RenderBufferStoreAction.Store
             );
+            cmd.SetGlobalTexture("_GBuffer0", colorTexture);
             // TODO: Do blit into intermediate buffer with bilinear filter, then blit onto the screen
             BlitUtils.BlitTexture(cmd, _cascades[0], _blit, 0);
         }
@@ -240,6 +241,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
             RenderBufferLoadAction.Load,
             RenderBufferStoreAction.Store
         );
+        cmd.SetGlobalTexture("_GBuffer0", colorRT);
         RenderGraphUtils.BlitTexture(ctx, cascades[0], _blit, 0);
     }
 
