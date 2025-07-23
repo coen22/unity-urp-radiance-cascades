@@ -15,6 +15,8 @@ this upgrade.
 
 - [x] Convert `RC2dPass`, `RC3dPass` and `DirectionFirstRCPass` to Render Graph
   passes. Each implements a basic `RecordRenderGraph` method.
+- [x] Convert pass data structs to classes for Render Graph integration.
+- [x] Mark HiZDepthPass Configure and Execute methods obsolete.
 - [ ] Replace direct calls to `CommandBuffer` setup with Render Graph resources
   (e.g. `textureHandle`, `RenderGraphBuilder`).
 - [ ] Ensure render targets (camera color, depth, intermediate buffers) are

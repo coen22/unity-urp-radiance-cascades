@@ -142,7 +142,7 @@ namespace AlexMalyutinDev.RadianceCascades
         }
 
 #if UNITY_6000_1_OR_NEWER
-        private struct PassData
+        private class PassData
         {
             public RenderingData renderingData;
             public DirectionFirstRCPass pass;

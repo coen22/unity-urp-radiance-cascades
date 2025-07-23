@@ -185,7 +185,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
     }
 
 #if UNITY_6000_1_OR_NEWER
-    private struct PassData
+    private class PassData
     {
         public RenderingData renderingData;
         public RC2dPass pass;

@@ -144,7 +144,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
     }
 
 #if UNITY_6000_1_OR_NEWER
-    private struct PassData
+    private class PassData
     {
         public RenderingData renderingData;
         public RadianceCascades3dPass pass;

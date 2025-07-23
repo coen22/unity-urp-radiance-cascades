@@ -20,6 +20,7 @@ namespace AlexMalyutinDev.RadianceCascades.HiZDepth
             _material = hiZDepthMaterial;
         }
 
+        [Obsolete("Use RecordRenderGraph", true)]
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
             var desc = new RenderTextureDescriptor(
@@ -44,6 +45,7 @@ namespace AlexMalyutinDev.RadianceCascades.HiZDepth
             RenderingUtils.ReAllocateIfNeeded(ref _tempDepth, desc);
         }
 
+        [Obsolete("Use RecordRenderGraph", true)]
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             var depth = renderingData.cameraData.renderer.cameraDepthTargetHandle;
