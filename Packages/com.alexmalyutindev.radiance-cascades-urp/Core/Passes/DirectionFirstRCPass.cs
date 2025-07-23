@@ -141,6 +141,97 @@ namespace AlexMalyutinDev.RadianceCascades
             CommandBufferPool.Release(cmd);
         }
 
+#if UNITY_6000_1_OR_NEWER
+        private struct PassData
+        {
+            public RenderingData renderingData;
+            public DirectionFirstRCPass pass;
+        }
+
+        internal void ExecutePass(CommandBuffer cmd, ref RenderingData renderingData)
+        {
+            var radianceCascades = VolumeManager.instance.stack.GetComponent<RadianceCascades>();
+
+            var renderer = renderingData.cameraData.renderer;
+            var colorBuffer = renderer.cameraColorTargetHandle;
+            var depthBuffer = renderer.cameraDepthTargetHandle;
+
+            using (new ProfilingScope(cmd, profilingSampler))
+            {
+                _compute.RenderMerge(
+                    cmd,
+                    ref renderingData.cameraData,
+                    depthBuffer,
+                    _renderingData.MinMaxDepth,
+                    _renderingData.VarianceDepth,
+                    _renderingData.BlurredColorBuffer,
+                    radianceCascades.RayScale.value,
+                    ref _cascade0
+                );
+
+                if (!radianceCascades.UseSH.value)
+                {
+                    cmd.BeginSample("RadianceCascade.Combine");
+                    {
+                        cmd.SetRenderTarget(_intermediateBuffer);
+                        cmd.SetGlobalTexture(ShaderIds.GBuffer3, renderer.GetGBuffer(3));
+                        cmd.SetGlobalTexture(ShaderIds.MinMaxDepth, _renderingData.MinMaxDepth);
+                        cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
+                        BlitUtils.BlitTexture(cmd, _cascade0, _blitMaterial, 2);
+
+                        cmd.SetRenderTarget(
+                            colorBuffer,
+                            RenderBufferLoadAction.Load,
+                            RenderBufferStoreAction.Store,
+                            depthBuffer,
+                            RenderBufferLoadAction.Load,
+                            RenderBufferStoreAction.Store
+                        );
+                        BlitUtils.BlitTexture(cmd, _intermediateBuffer, _blitMaterial, 3);
+                    }
+                    cmd.EndSample("RadianceCascade.Combine");
+                }
+                else
+                {
+                    _compute.CombineSH(
+                        cmd,
+                        ref renderingData.cameraData,
+                        _cascade0,
+                        _renderingData.MinMaxDepth,
+                        _renderingData.VarianceDepth,
+                        _radianceSH
+                    );
+
+                    cmd.BeginSample("RadianceCascade.BlitSH");
+                    cmd.SetGlobalTexture("_GBuffer0", colorBuffer);
+                    cmd.SetRenderTarget(
+                        colorBuffer,
+                        RenderBufferLoadAction.Load,
+                        RenderBufferStoreAction.Store,
+                        depthBuffer,
+                        RenderBufferLoadAction.Load,
+                        RenderBufferStoreAction.Store
+                    );
+                    cmd.SetGlobalMatrix("_ViewToWorld", renderingData.cameraData.GetViewMatrix().inverse);
+                    cmd.SetGlobalTexture("_MinMaxDepth", _renderingData.MinMaxDepth);
+                    BlitUtils.BlitTexture(cmd, _radianceSH, _blitMaterial, 4);
+                    cmd.EndSample("RadianceCascade.BlitSH");
+                }
+            }
+        }
+
+        public void RecordRenderGraph(RenderGraph renderGraph, in RenderingData renderingData)
+        {
+            using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(DirectionFirstRCPass), out var passData);
+            passData.renderingData = renderingData;
+            passData.pass = this;
+            builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+            {
+                data.pass.ExecutePass(ctx.cmd, ref data.renderingData);
+            });
+        }
+#endif
+
         public void Dispose()
         {
             _cascade0?.Release();

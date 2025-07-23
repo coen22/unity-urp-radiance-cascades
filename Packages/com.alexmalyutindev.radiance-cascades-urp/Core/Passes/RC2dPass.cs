@@ -3,6 +3,9 @@ using AlexMalyutinDev.RadianceCascades;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_6000_1_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class RC2dPass : ScriptableRenderPass, IDisposable
 {
@@ -40,6 +43,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         // ConfigureInput(ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Color);
     }
 
+    [Obsolete("Use RecordRenderGraph", true)]
     public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
     {
         // TODO: Resolution settings?
@@ -64,6 +68,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         }
     }
 
+    [Obsolete("Use RecordRenderGraph", true)]
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         var cmd = CommandBufferPool.Get();
@@ -178,6 +183,40 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
 
         cmd.EndSample("Preview");
     }
+
+#if UNITY_6000_1_OR_NEWER
+    private struct PassData
+    {
+        public RenderingData renderingData;
+        public RC2dPass pass;
+    }
+
+    internal void ExecutePass(CommandBuffer cmd, ref RenderingData renderingData)
+    {
+        var colorTexture = renderingData.cameraData.renderer.cameraColorTargetHandle;
+        var depthTexture = renderingData.cameraData.renderer.cameraDepthTargetHandle;
+
+        var colorTextureRT = colorTexture.rt;
+        if (colorTextureRT == null)
+            return;
+
+        using (new ProfilingScope(cmd, _profilingSampler))
+        {
+            RenderCascades(renderingData, cmd, colorTexture, depthTexture);
+        }
+    }
+
+    public void RecordRenderGraph(RenderGraph renderGraph, in RenderingData renderingData)
+    {
+        using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(RC2dPass), out var passData);
+        passData.renderingData = renderingData;
+        passData.pass = this;
+        builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+        {
+            data.pass.ExecutePass(ctx.cmd, ref data.renderingData);
+        });
+    }
+#endif
 
 
     public void Dispose()

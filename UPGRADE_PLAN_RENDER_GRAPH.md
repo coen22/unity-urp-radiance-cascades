@@ -6,16 +6,15 @@ Render Graph framework. Below is a high level plan of work required to perform
 this upgrade.
 
 ## General steps
-- [ ] Update the URP package in `Packages/manifest.json` to `com.unity.render-pipelines.universal` version `17.x` if not already using the latest patch.
+- [x] Update the URP package in `Packages/manifest.json` to `com.unity.render-pipelines.universal` version `17.x` if not already using the latest patch.
 - [ ] Review release notes and migration guides from Unity for URP 17 and the
   Render Graph API.
-- [ ] Clean up obsolete API usage warnings (e.g. `Configure` and `Execute` methods
+- [x] Clean up obsolete API usage warnings (e.g. `Configure` and `Execute` methods
   in `ScriptableRenderPass`). These will be replaced with Render Graph render
   pass implementations.
 
-## Pass migration
-- [ ] Convert `RC2dPass`, `RC3dPass` and `DirectionFirstRCPass` to Render Graph
-  passes. Each should implement a `RecordRenderGraph` method or equivalent.
+- [x] Convert `RC2dPass`, `RC3dPass` and `DirectionFirstRCPass` to Render Graph
+  passes. Each implements a basic `RecordRenderGraph` method.
 - [ ] Replace direct calls to `CommandBuffer` setup with Render Graph resources
   (e.g. `textureHandle`, `RenderGraphBuilder`).
 - [ ] Ensure render targets (camera color, depth, intermediate buffers) are

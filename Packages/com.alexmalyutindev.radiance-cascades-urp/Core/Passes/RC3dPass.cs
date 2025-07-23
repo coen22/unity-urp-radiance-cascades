@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_6000_1_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
 {
@@ -29,6 +32,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
         _blitMaterial = resources.BlitMaterial;
     }
 
+    [Obsolete("Use RecordRenderGraph", true)]
     public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
     {
         const int scale = 4;
@@ -55,6 +59,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
         }
     }
 
+    [Obsolete("Use RecordRenderGraph", true)]
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         var cmd = CommandBufferPool.Get();
@@ -137,6 +142,40 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
         Blitter.BlitTexture(cmd, _cascades[0], new Vector4(1f / 2f, 1f / 3f, 0, 0), _blitMaterial, 1);
         cmd.EndSample(sampleKey);
     }
+
+#if UNITY_6000_1_OR_NEWER
+    private struct PassData
+    {
+        public RenderingData renderingData;
+        public RadianceCascades3dPass pass;
+    }
+
+    internal void ExecutePass(CommandBuffer cmd, ref RenderingData renderingData)
+    {
+        var colorTexture = renderingData.cameraData.renderer.cameraColorTargetHandle;
+        var depthTexture = renderingData.cameraData.renderer.cameraDepthTargetHandle;
+
+        var colorTextureRT = colorTexture.rt;
+        if (colorTextureRT == null)
+            return;
+
+        using (new ProfilingScope(cmd, _profilingSampler))
+        {
+            Render(cmd, ref renderingData, colorTexture, depthTexture);
+        }
+    }
+
+    public void RecordRenderGraph(RenderGraph renderGraph, in RenderingData renderingData)
+    {
+        using var builder = renderGraph.AddRasterRenderPass<PassData>(nameof(RadianceCascades3dPass), out var passData);
+        passData.renderingData = renderingData;
+        passData.pass = this;
+        builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+        {
+            data.pass.ExecutePass(ctx.cmd, ref data.renderingData);
+        });
+    }
+#endif
 
 
     public void Dispose()
