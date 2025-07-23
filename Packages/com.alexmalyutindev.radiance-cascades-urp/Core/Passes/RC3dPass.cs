@@ -73,7 +73,7 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
             return;
         }
 
-        using (new ProfilingScope(cmd, _profilingSampler))
+        using (new ProfilingScope((CommandBuffer)cmd, _profilingSampler))
         {
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
@@ -160,13 +160,13 @@ public class RadianceCascades3dPass : ScriptableRenderPass, IDisposable
         if (colorTextureRT == null)
             return;
 
-        using (new ProfilingScope(cmd, _profilingSampler))
+        using (new ProfilingScope((CommandBuffer)cmd, _profilingSampler))
         {
             RenderRG(ctx, cmd, ref renderingData, color, depth, cascades);
         }
     }
 
-    private static void RenderRG(
+    private void RenderRG(
         in RasterGraphContext ctx,
         CommandBuffer cmd,
         ref RenderingData renderingData,

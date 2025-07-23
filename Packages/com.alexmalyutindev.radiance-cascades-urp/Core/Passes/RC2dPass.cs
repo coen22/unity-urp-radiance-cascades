@@ -83,7 +83,7 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
             return;
         }
 
-        using (new ProfilingScope(cmd, _profilingSampler))
+        using (new ProfilingScope((CommandBuffer)cmd, _profilingSampler))
         {
             RenderCascades(renderingData, cmd, colorTexture, depthTexture);
             context.ExecuteCommandBuffer(cmd);
@@ -202,13 +202,13 @@ public class RC2dPass : ScriptableRenderPass, IDisposable
         if (colorTextureRT == null)
             return;
 
-        using (new ProfilingScope(cmd, _profilingSampler))
+        using (new ProfilingScope((CommandBuffer)cmd, _profilingSampler))
         {
             RenderCascadesRG(ctx, renderingData, cmd, color, depth, cascades);
         }
     }
 
-    private static void RenderCascadesRG(
+    private void RenderCascadesRG(
         in RasterGraphContext ctx,
         in RenderingData renderingData,
         CommandBuffer cmd,

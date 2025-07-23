@@ -33,6 +33,7 @@ namespace AlexMalyutinDev.RadianceCascades
             _renderingData = renderingData;
         }
 
+        [Obsolete("Use RecordRenderGraph", true)]
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
             // 512 => 512 / 8 = 64 probes in row
@@ -63,6 +64,7 @@ namespace AlexMalyutinDev.RadianceCascades
             RenderingUtils.ReAllocateIfNeeded(ref _intermediateBuffer, desc, name: "RadianceBuffer");
         }
 
+        [Obsolete("Use RecordRenderGraph", true)]
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             var radianceCascades = VolumeManager.instance.stack.GetComponent<RadianceCascades>();
@@ -73,7 +75,7 @@ namespace AlexMalyutinDev.RadianceCascades
 
             var cmd = CommandBufferPool.Get();
 
-            using (new ProfilingScope(cmd, profilingSampler))
+            using (new ProfilingScope((CommandBuffer)cmd, profilingSampler))
             {
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
@@ -162,7 +164,7 @@ namespace AlexMalyutinDev.RadianceCascades
             var colorBuffer = color.rt;
             var depthBuffer = depth.rt;
 
-            using (new ProfilingScope(cmd, profilingSampler))
+            using (new ProfilingScope((CommandBuffer)cmd, profilingSampler))
             {
                 _compute.RenderMerge(
                     cmd,
